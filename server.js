@@ -1,6 +1,6 @@
 const express = require('express');
 const os = require('os');
-const { ORIGIN, isBlockedUrl, rewriteHtml } = require('./filter');
+const { ORIGIN, getOriginHost, isBlockedUrl, rewriteHtml } = require('./filter');
 
 const app = express();
 const port = Number(process.env.PORT || 8787);
@@ -33,6 +33,8 @@ function printStartupInfo() {
     .map((net) => net.address);
 
   console.log(`Otakudesu proxy aktif di http://0.0.0.0:${port}`);
+  console.log(`Situs sumber: ${ORIGIN}`);
+  console.log(`Ubah domain: SITE_ORIGIN=https://otakudesu.care npm run start`);
   console.log(`Health check: http://127.0.0.1:${port}/health`);
   console.log(`Android emulator: http://10.0.2.2:${port}`);
   if (lanAddresses.length > 0) {
@@ -57,6 +59,7 @@ app.get('/health', (_request, response) => {
   response.json({
     ok: true,
     origin: ORIGIN,
+    siteHost: getOriginHost(),
     port,
   });
 });

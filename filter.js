@@ -45,9 +45,10 @@ const blockedHostKeywords = [
 ];
 
 const hideSelectors = [
-  'iframe',
   'ins.adsbygoogle',
-  '[id*="ad"]',
+  '[id*="ads"]',
+  '[id^="ad-"]',
+  '[id$="-ad"]',
   '[class*="ad-"]',
   '[class^="ad-"]',
   '[class*="ads"]',
@@ -67,6 +68,23 @@ const hideSelectors = [
   '#overplay',
   '#iklanbawah',
   '[id^="iklantengah"]',
+  'iframe[src*="doubleclick"]',
+  'iframe[src*="googlesyndication"]',
+  'iframe[src*="googleadservices"]',
+  'iframe[src*="popads"]',
+];
+
+const playerShowSelectors = [
+  '#lightsVideo',
+  '#embed_holder',
+  '#pembed',
+  '.player-embed',
+  '.responsive-embed-stream',
+  '#embed_holder iframe',
+  '#pembed iframe',
+  '.player-embed iframe',
+  '.responsive-embed-stream iframe',
+  '#lightsVideo iframe',
 ];
 
 const episodeAdRemoveSelectors = [
@@ -233,7 +251,8 @@ function rewriteHtml(html) {
     $('head').prepend('<base href="/" data-otakudesu-proxy="true">');
   }
 
-  const antiAdCss = `${hideSelectors.join(', ')} { display: none !important; visibility: hidden !important; max-height: 0 !important; pointer-events: none !important; }`;
+  const antiAdCss = `${hideSelectors.join(', ')} { display: none !important; visibility: hidden !important; max-height: 0 !important; pointer-events: none !important; }
+${playerShowSelectors.join(', ')} { display: block !important; visibility: visible !important; max-height: none !important; pointer-events: auto !important; }`;
   const antiPopupJs = `
     (() => {
       const siteHost = ${JSON.stringify(siteHost)};

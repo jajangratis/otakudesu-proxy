@@ -3,14 +3,27 @@ const { cleanText, isAdPath, toAbsoluteUrl, toSitePath } = require('./utils');
 const STREAM_HOST_KEYWORDS = [
   'desustream',
   'desustream.info',
+  'link.desustream',
   'yourupload',
   'mp4upload',
   'streamwish',
+  'embedwish',
+  'luluvdo',
   'filemoon',
   'vidhide',
   'dood',
+  'doodstream',
   'gdrive',
   'googlevideo',
+  'streamtape',
+  'mixdrop',
+  'voe.sx',
+  'vidguard',
+  'streamsb',
+  'sbembed',
+  'tubeload',
+  'upstream',
+  'mp4hydra',
 ];
 
 const DOWNLOAD_LABEL_KEYWORDS = [

@@ -76,7 +76,17 @@ function detectPageKind(path) {
     return 'search';
   }
 
-  if (normalized === '/ongoing-anime/' || normalized === '/complete-anime/') {
+  if (
+    normalized === '/ongoing-anime/' ||
+    /^\/ongoing-anime\/page\/\d+\/$/.test(normalized)
+  ) {
+    return 'grid';
+  }
+
+  if (
+    normalized === '/complete-anime/' ||
+    /^\/complete-anime\/page\/\d+\/$/.test(normalized)
+  ) {
     return 'grid';
   }
 

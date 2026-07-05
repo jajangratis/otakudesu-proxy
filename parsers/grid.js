@@ -1,4 +1,5 @@
 const { cleanText, isAdPath, toAbsoluteUrl, toSitePath } = require('./utils');
+const { extractPagination } = require('./pagination');
 
 function extractThumbnail($card) {
   const img =
@@ -100,13 +101,17 @@ function parseGridPage($, path, title) {
     cleanText($('.breadcrumb').last().text()) ||
     'Anime';
 
+  const pagination = extractPagination($, path);
+
   return {
     ok: true,
     kind: 'grid',
     path,
     title: pageTitle,
     items: collectGridItems($),
-    nextPath: null,
+    pagination,
+    prevPath: pagination.prevPath,
+    nextPath: pagination.nextPath,
   };
 }
 
@@ -227,6 +232,8 @@ function parseHomePage($, path) {
     path,
     title: cleanText($('h1').first().text()) || 'Beranda',
     sections: mergedSections,
+    pagination: null,
+    prevPath: null,
     nextPath: null,
   };
 }

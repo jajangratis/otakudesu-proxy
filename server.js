@@ -119,9 +119,18 @@ app.get('/api/search', async (request, response) => {
     post_type: 'anime',
   });
 
+  const page = Number(request.query.page);
+  if (Number.isFinite(page) && page > 1) {
+    searchParams.set('paged', String(Math.floor(page)));
+  }
+
   try {
     const { html } = await fetchUpstreamHtml('/', searchParams);
     const payload = parsePage(html, '/search/');
+    if (payload.ok && payload.kind === 'grid') {
+      payload.searchKeyword = keyword;
+      payload.searchPage = Number.isFinite(page) && page > 1 ? Math.floor(page) : 1;
+    }
     response.json(payload);
   } catch (error) {
     response.status(502).json({

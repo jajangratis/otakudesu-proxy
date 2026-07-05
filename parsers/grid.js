@@ -110,15 +110,54 @@ function parseGridPage($, path, title) {
   };
 }
 
+function extractMoreLinkMeta($, $section) {
+  const $parent = $section.parent();
+  const $moreLink = $parent
+    .find('a[href*="/ongoing-anime/"], a[href*="/complete-anime/"]')
+    .first();
+
+  if (!$moreLink.length) {
+    return { title: null, moreLabel: null, morePath: null };
+  }
+
+  const morePath = toSitePath($moreLink.attr('href'));
+  const title =
+    cleanText($moreLink.find('h1').first().text()) ||
+    cleanText($moreLink.find('h2').first().text()) ||
+    null;
+
+  let moreLabel =
+    cleanText($moreLink.find('.iconf').first().text()) ||
+    cleanText($moreLink.text().match(/Cek Anime[\s\S]*?Lainnya/i)?.[0] || '');
+
+  if (!moreLabel && morePath) {
+    if (morePath.includes('ongoing-anime')) {
+      moreLabel = 'Cek Anime On-going Lainnya';
+    } else if (morePath.includes('complete-anime')) {
+      moreLabel = 'Cek Anime Selesai Lainnya';
+    }
+  }
+
+  return {
+    title,
+    moreLabel: moreLabel || null,
+    morePath,
+  };
+}
+
 function parseHomePage($, path) {
   const sections = [];
 
   $('.venz').each((_, element) => {
     const $section = $(element);
+    const meta = extractMoreLinkMeta($, $section);
     const heading =
+      meta.title ||
       cleanText($section.prev('h2').text()) ||
       cleanText($section.prev('.bixbox').find('h2').text()) ||
       cleanText($section.closest('.bixbox').find('h2').first().text()) ||
+      (meta.morePath?.includes('ongoing-anime') ? 'On-going Anime' : null) ||
+      (meta.morePath?.includes('complete-anime') ? 'Complete Anime' : null) ||
       'Anime';
 
     const items = [];
@@ -135,7 +174,12 @@ function parseHomePage($, path) {
     });
 
     if (items.length > 0) {
-      sections.push({ title: heading, items });
+      sections.push({
+        title: heading,
+        items,
+        moreLabel: meta.moreLabel,
+        morePath: meta.morePath,
+      });
     }
   });
 
@@ -144,12 +188,45 @@ function parseHomePage($, path) {
     sections.push({ title: 'Beranda', items });
   }
 
+  const mergedSections = [];
+  const sectionIndex = new Map();
+
+  sections.forEach((section) => {
+    const existing = sectionIndex.get(section.title);
+    if (!existing) {
+      const next = {
+        title: section.title,
+        items: [...section.items],
+        moreLabel: section.moreLabel,
+        morePath: section.morePath,
+      };
+      sectionIndex.set(section.title, next);
+      mergedSections.push(next);
+      return;
+    }
+
+    const seen = new Set(existing.items.map((item) => item.path));
+    section.items.forEach((item) => {
+      if (seen.has(item.path)) {
+        return;
+      }
+
+      seen.add(item.path);
+      existing.items.push(item);
+    });
+
+    if (!existing.morePath && section.morePath) {
+      existing.morePath = section.morePath;
+      existing.moreLabel = section.moreLabel;
+    }
+  });
+
   return {
     ok: true,
     kind: 'home',
     path,
     title: cleanText($('h1').first().text()) || 'Beranda',
-    sections,
+    sections: mergedSections,
     nextPath: null,
   };
 }

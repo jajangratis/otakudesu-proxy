@@ -1,6 +1,8 @@
 const express = require('express');
 const os = require('os');
 const { ORIGIN, getOriginHost, isBlockedUrl, rewriteHtml } = require('./filter');
+const { fetchUpstreamHtml } = require('./parsers/fetch');
+const { normalizePath, parsePage } = require('./parsers/index');
 
 const app = express();
 const port = Number(process.env.PORT || 8787);
@@ -61,7 +63,74 @@ app.get('/health', (_request, response) => {
     origin: ORIGIN,
     siteHost: getOriginHost(),
     port,
+    apiVersion: 1,
+    features: ['home', 'grid', 'detail', 'episode', 'schedule', 'genreList', 'batch', 'animeList'],
   });
+});
+
+async function handleApiPage(request, response) {
+  const rawPath = typeof request.query.path === 'string' ? request.query.path : '/';
+  const path = normalizePath(rawPath);
+
+  if (isBlockedUrl(`${ORIGIN}${path}`)) {
+    response.status(403).json({ ok: false, error: 'Blocked by proxy filter' });
+    return;
+  }
+
+  try {
+    const searchParams = new URLSearchParams();
+    Object.entries(request.query).forEach(([key, value]) => {
+      if (key === 'path' || value === undefined) {
+        return;
+      }
+
+      if (Array.isArray(value)) {
+        value.forEach((entry) => searchParams.append(key, String(entry)));
+        return;
+      }
+
+      searchParams.set(key, String(value));
+    });
+
+    const { html } = await fetchUpstreamHtml(path, searchParams);
+    const payload = parsePage(html, path);
+    response.json(payload);
+  } catch (error) {
+    response.status(502).json({
+      ok: false,
+      error: 'Failed to parse page',
+      details: error instanceof Error ? error.message : String(error),
+      fallbackPath: path,
+    });
+  }
+}
+
+app.get('/api/page', handleApiPage);
+
+app.get('/api/search', async (request, response) => {
+  const keyword = typeof request.query.q === 'string' ? request.query.q.trim() : '';
+  if (!keyword) {
+    response.status(400).json({ ok: false, error: 'Parameter q wajib diisi' });
+    return;
+  }
+
+  const searchParams = new URLSearchParams({
+    s: keyword,
+    post_type: 'anime',
+  });
+
+  try {
+    const { html } = await fetchUpstreamHtml('/', searchParams);
+    const payload = parsePage(html, '/search/');
+    response.json(payload);
+  } catch (error) {
+    response.status(502).json({
+      ok: false,
+      error: 'Failed to parse search',
+      details: error instanceof Error ? error.message : String(error),
+      fallbackPath: '/',
+    });
+  }
 });
 
 app.get('/{*path}', async (request, response) => {

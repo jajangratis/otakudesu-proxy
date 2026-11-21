@@ -27,8 +27,22 @@ function extractBadge($card) {
     cleanText($card.find('.epz').first().text()) ||
     cleanText($card.find('.epztipe').first().text()) ||
     cleanText($card.find('.dtla').first().text()) ||
+    extractSearchStatus($card) ||
     null
   );
+}
+
+// Kartu hasil pencarian (.chivsrc li) tidak punya .epz; pakai baris "Status : ..." sebagai badge.
+function extractSearchStatus($card) {
+  let status = null;
+  $card.find('.set').each((_, element) => {
+    const text = cleanText($card.find(element).text());
+    const match = /^Status\s*:\s*(.+)$/i.exec(text);
+    if (match && !status) {
+      status = match[1];
+    }
+  });
+  return status;
 }
 
 function parseGridCard($, element) {
@@ -58,7 +72,7 @@ function collectGridItems($) {
   const seen = new Set();
   const items = [];
 
-  $('.venz li, .detpost, .animepost').each((_, element) => {
+  $('.venz li, .detpost, .animepost, .chivsrc li').each((_, element) => {
     const item = parseGridCard($, element);
     if (!item || seen.has(item.path)) {
       return;

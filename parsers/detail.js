@@ -8,11 +8,13 @@ function parseDetailPage($, path) {
     'Detail Anime';
 
   const thumbnail =
-    toAbsoluteUrl($('.infozin .thumb img').attr('src')) ||
-    toAbsoluteUrl($('.thumb img').first().attr('src'));
+    toAbsoluteUrl($('.fotoanime img').first().attr('src')) ||
+    toAbsoluteUrl($('.infozin .thumb img').first().attr('src')) ||
+    toAbsoluteUrl($('.thumb img').first().attr('src')) ||
+    toAbsoluteUrl($('img.wp-post-image').first().attr('src'));
 
   const info = {};
-  $('.infozin .infox .infox span, .infox span').each((_, element) => {
+  $('.infozingle span, .infozin .infox span, .infox span').each((_, element) => {
     const text = cleanText($(element).text());
     const parts = text.split(':');
     if (parts.length >= 2) {

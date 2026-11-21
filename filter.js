@@ -144,7 +144,13 @@ function toProxyPath(rawUrl) {
     return '';
   }
 
-  const parsed = new URL(rawUrl, ORIGIN);
+  let parsed;
+  try {
+    parsed = new URL(rawUrl, ORIGIN);
+  } catch {
+    // URL rusak di HTML sumber jangan sampai bikin seluruh halaman 502.
+    return rawUrl;
+  }
   if (!isSiteHost(parsed.hostname)) {
     return rawUrl;
   }
@@ -408,7 +414,7 @@ ${playerShowSelectors.join(', ')} { display: block !important; visibility: visib
 
   return $.html()
     .replace(originPattern, '')
-    .replace(/https?:\/\/[^"'\\s>]*rebrand\.ly[^"'\\s>]*/gi, '');
+    .replace(/https?:\/\/[^"'\s>]*rebrand\.ly[^"'\s>]*/gi, '');
 }
 
 module.exports = {
